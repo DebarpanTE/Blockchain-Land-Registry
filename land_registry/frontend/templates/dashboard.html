@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏛️ Land Registry Blockchain System</title>
+<style>
+  :root {
+    --primary: #1a3c5e;
+    --accent: #2980b9;
+    --success: #27ae60;
+    --warning: #f39c12;
+    --danger: #e74c3c;
+    --light: #ecf0f1;
+    --dark: #2c3e50;
+    --bg: #f0f4f8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--dark); }
+
+  header {
+    background: linear-gradient(135deg, #1a3c5e 0%, #2980b9 100%);
+    color: white; padding: 1.4rem 2rem;
+    display: flex; align-items: center; gap: 1rem;
+    box-shadow: 0 3px 12px rgba(0,0,0,.25);
+  }
+  header h1 { font-size: 1.55rem; letter-spacing: -.3px; }
+  header p  { opacity: .75; font-size: .88rem; margin-top: .15rem; }
+  .header-right { margin-left: auto; text-align: right; font-size: .82rem; opacity: .85; line-height: 1.7; }
+
+  nav { background: #1e2d3d; display: flex; padding: 0 2rem; overflow-x: auto; }
+  nav button {
+    background: none; border: none; color: rgba(255,255,255,.65);
+    padding: .78rem 1.15rem; cursor: pointer; font-size: .875rem; white-space: nowrap;
+    border-bottom: 3px solid transparent; transition: all .2s;
+  }
+  nav button:hover { color: white; }
+  nav button.active { color: white; border-bottom-color: #3fa3e8; }
+
+  main { padding: 1.8rem 2rem; max-width: 1400px; margin: 0 auto; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px,1fr)); gap: 1rem; margin-bottom: 1.8rem; }
+  .stat-card {
+    background: white; border-radius: 12px; padding: 1.3rem 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,.07); border-top: 4px solid var(--accent); text-align: center;
+  }
+  .stat-card .number { font-size: 2.1rem; font-weight: 800; color: var(--primary); }
+  .stat-card .label  { font-size: .8rem; color: #777; margin-top: .25rem; text-transform: uppercase; letter-spacing: .05em; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card {
+    background: white; border-radius: 12px; padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,.07); margin-bottom: 1.5rem;
+  }
+  .card h2 { font-size: 1.05rem; margin-bottom: 1.1rem; color: var(--primary);
+    padding-bottom: .5rem; border-bottom: 2px solid var(--light); }
+
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap: 1rem; }
+  .form-group { display: flex; flex-direction: column; gap: .35rem; }
+  .form-group label { font-size: .82rem; font-weight: 600; color: #555; }
+  .form-group input, .form-group select, .form-group textarea {
+    padding: .58rem .88rem; border: 1.5px solid #dde3ec; border-radius: 7px;
+    font-size: .88rem; background: #fafbfc; transition: border .18s, box-shadow .18s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(41,128,185,.12);
+  }
+  .form-group textarea { resize: vertical; min-height: 75px; }
+
+  .btn {
+    padding: .65rem 1.4rem; border: none; border-radius: 7px;
+    font-size: .875rem; font-weight: 600; cursor: pointer; transition: all .18s;
+    display: inline-flex; align-items: center; gap: .35rem;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #1f6fa3; }
+  .btn-success { background: var(--success); color: white; }
+  .btn-success:hover { background: #1e8449; }
+  .btn-warning { background: var(--warning); color: white; }
+  .btn-danger  { background: var(--danger);  color: white; }
+  .btn-outline { background: white; color: var(--accent); border: 1.5px solid var(--accent); }
+  .btn-outline:hover { background: #eaf4fb; }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+  th { background: var(--primary); color: white; padding: .7rem 1rem; text-align: left; font-weight: 600; }
+  td { padding: .65rem 1rem; border-bottom: 1px solid #eef0f4; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f4f8ff; }
+
+  .badge {
+    padding: .22rem .65rem; border-radius: 20px; font-size: .72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .06em; display: inline-block;
+  }
+  .badge-active     { background: #d4efdf; color: #1a6635; }
+  .badge-disputed   { background: #fde8e4; color: #a93226; }
+  .badge-encumbered { background: #fef5e7; color: #9a6a00; }
+  .badge-frozen     { background: #d6eaf8; color: #1a5276; }
+  .badge-blue  { background: #d6eaf8; color: #1a5276; }
+  .badge-green { background: #d4efdf; color: #1a6635; }
+  .badge-gray  { background: #eaecee; color: #555; }
+
+  .alert { padding: .8rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .875rem; display: flex; align-items: flex-start; gap: .5rem; }
+  .alert-info    { background: #eaf4fb; color: #1a4f72; border-left: 4px solid var(--accent); }
+  .alert-success { background: #eafaf1; color: #1a6635; border-left: 4px solid var(--success); }
+  .alert-error   { background: #fdedec; color: #922b21; border-left: 4px solid var(--danger); }
+  .alert-warning { background: #fef9e7; color: #7d6608; border-left: 4px solid var(--warning); }
+
+  /* ── Result Cards ── */
+  .result-card {
+    border-radius: 12px; padding: 1.3rem 1.5rem; margin-top: 1.3rem;
+    animation: fadeIn .3s ease; display: none; border: 1.5px solid transparent;
+  }
+  .result-card.show { display: block; }
+  .result-card.rc-success { background: #eafaf1; border-color: #a9dfbf; }
+  .result-card.rc-error   { background: #fdedec; border-color: #f1948a; }
+
+  .rc-header {
+    display: flex; align-items: center; gap: .6rem;
+    font-size: 1rem; font-weight: 700; margin-bottom: 1rem;
+    padding-bottom: .7rem; border-bottom: 1px solid rgba(0,0,0,.08);
+  }
+  .rc-success .rc-header { color: #1a6635; }
+  .rc-error   .rc-header { color: #922b21; }
+
+  .rc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px,1fr)); gap: .75rem; }
+  .rc-field { background: rgba(255,255,255,.65); border-radius: 8px; padding: .65rem .85rem; }
+  .rc-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #888; margin-bottom: .2rem; }
+  .rc-value { font-size: .9rem; font-weight: 600; color: var(--dark); word-break: break-word; }
+  .rc-id    { font-family: monospace; font-size: .78rem; background: rgba(0,0,0,.06); padding: .18rem .45rem; border-radius: 4px; }
+  .rc-note  { margin-top: .9rem; font-size: .82rem; color: #555; background: rgba(255,255,255,.6); padding: .6rem .9rem; border-radius: 7px; border-left: 3px solid rgba(0,0,0,.1); }
+  .rc-error-msg { font-size: .92rem; color: #922b21; margin-top: .4rem; }
+
+  /* ── Land Detail Card ── */
+  .land-detail-card { border: 1.5px solid #d5e8f5; border-radius: 12px; overflow: hidden; margin-top: 1rem; animation: fadeIn .3s ease; }
+  .ldc-header { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; padding: 1rem 1.4rem; display: flex; justify-content: space-between; align-items: flex-start; }
+  .ldc-header h3 { font-size: 1.1rem; }
+  .ldc-header p  { font-size: .82rem; opacity: .8; margin-top: .2rem; }
+  .ldc-body { padding: 1.2rem 1.4rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px,1fr)); gap: .8rem; }
+  .ldc-field .ldc-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: .05em; }
+  .ldc-field .ldc-value { font-size: .92rem; font-weight: 600; margin-top: .15rem; }
+  .ldc-id { font-family: monospace; font-size: .75rem; background: #f0f4f8; padding: .25rem .55rem; border-radius: 5px; display: inline-block; margin-top: .15rem; }
+  .ldc-footer { background: #f8fafc; padding: .8rem 1.4rem; border-top: 1px solid #e8eef5; font-size: .8rem; color: #777; display: flex; gap: 1.5rem; flex-wrap: wrap; }
+
+  /* ── Timeline ── */
+  .timeline { margin-top: .5rem; }
+  .tl-item { display: flex; gap: 1rem; padding: .85rem 0; border-bottom: 1px solid #eef0f4; align-items: flex-start; }
+  .tl-item:last-child { border-bottom: none; }
+  .tl-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.05rem; flex-shrink: 0; margin-top: .1rem; }
+  .tl-icon.register  { background: #d4efdf; }
+  .tl-icon.transfer  { background: #d6eaf8; }
+  .tl-icon.encumber  { background: #fef5e7; }
+  .tl-icon.release   { background: #eafaf1; }
+  .tl-icon.dispute   { background: #fde8e4; }
+  .tl-icon.resolve   { background: #f4ecf7; }
+  .tl-icon.default   { background: #eaecee; }
+  .tl-body { flex: 1; }
+  .tl-title  { font-size: .9rem; font-weight: 700; color: var(--primary); }
+  .tl-meta   { font-size: .78rem; color: #888; margin-top: .15rem; }
+  .tl-tags   { margin-top: .35rem; display: flex; gap: .4rem; flex-wrap: wrap; }
+  .tl-tag    { font-size: .7rem; padding: .12rem .45rem; border-radius: 4px; font-weight: 600; }
+  .tl-tag-block { background: #e8eef5; color: #1a5276; }
+  .tl-tag-tx    { background: #e8f5e9; color: #2e7d32; }
+
+  /* ── Blockchain Explorer ── */
+  .block-card { border: 1.5px solid #dde6f0; border-radius: 10px; margin-bottom: 1rem; overflow: hidden; transition: box-shadow .2s; }
+  .block-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.1); }
+  .bc-header { background: linear-gradient(90deg, #1a3c5e, #2471a3); color: white; padding: .75rem 1.2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+  .bc-header .block-num  { font-size: 1rem; font-weight: 700; }
+  .bc-header .block-meta { font-size: .78rem; opacity: .8; }
+  .genesis-tag { background: #fef5e7; color: #9a6a00; padding: .15rem .5rem; border-radius: 4px; font-size: .72rem; font-weight: 700; }
+  .bc-hashes { background: #f0f4f8; padding: .6rem 1.2rem; font-family: monospace; font-size: .72rem; color: #555; border-bottom: 1px solid #dde6f0; }
+  .bc-hashes .hash-label { font-family: 'Segoe UI', sans-serif; font-size: .68rem; font-weight: 700; text-transform: uppercase; color: #888; margin-bottom: .1rem; }
+  .bc-hashes span { display: block; margin-bottom: .35rem; }
+  .bc-txns  { padding: .8rem 1.2rem; }
+  .bc-empty { padding: .8rem 1.2rem; color: #999; font-style: italic; font-size: .85rem; }
+  .bc-tx { display: flex; align-items: center; gap: .8rem; padding: .5rem .8rem; background: #f8fafc; border-radius: 7px; margin-bottom: .4rem; border-left: 3px solid var(--accent); font-size: .82rem; flex-wrap: wrap; }
+  .bc-tx:last-child { margin-bottom: 0; }
+  .bc-tx .tx-type { font-weight: 700; color: var(--primary); min-width: 190px; }
+  .bc-tx .tx-flow { color: #555; flex: 1; }
+  .bc-tx .tx-land { font-family: monospace; color: #888; font-size: .75rem; }
+
+  .validate-banner { display: none; margin-top: 1rem; padding: 1rem 1.4rem; border-radius: 10px; font-size: .95rem; font-weight: 600; align-items: center; gap: .6rem; animation: fadeIn .3s ease; }
+  .validate-banner.show   { display: flex; }
+  .validate-banner.valid  { background: #eafaf1; border: 1.5px solid #a9dfbf; color: #1a6635; }
+  .validate-banner.invalid{ background: #fdedec; border: 1.5px solid #f1948a; color: #922b21; }
+
+  .search-bar { display: flex; gap: .7rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
+  .search-bar input { flex: 1; min-width: 200px; padding: .6rem 1rem; border: 1.5px solid #dde3ec; border-radius: 7px; font-size: .88rem; background: #fafbfc; }
+  .search-bar input:focus { outline: none; border-color: var(--accent); }
+
+  .divider   { height: 1px; background: var(--light); margin: 1.2rem 0; }
+  .copy-btn  { background: none; border: 1px solid #ccc; border-radius: 4px; padding: .13rem .42rem; font-size: .7rem; cursor: pointer; color: #666; margin-left: .35rem; }
+  .copy-btn:hover { background: #f0f4f8; }
+  .spinner   { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.4); border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: .25rem; }
+  .empty-state { text-align: center; padding: 2.5rem 1rem; color: #aaa; }
+  .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: .5rem; }
+
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes spin   { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="font-size:2rem">🏛️</div>
+  <div>
+    <h1>Land Registry Blockchain System</h1>
+    <p>Secure • Transparent • Immutable</p>
+  </div>
+  <div class="header-right">
+    Chain: <strong id="chainValid">—</strong><br>
+    Blocks: <strong id="blockCount">—</strong>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="showPanel('dashboard',this)">📊 Dashboard</button>
+  <button onclick="showPanel('register',this)">📝 Register Land</button>
+  <button onclick="showPanel('transfer',this)">🔄 Transfer</button>
+  <button onclick="showPanel('encumber',this)">🔒 Encumber</button>
+  <button onclick="showPanel('dispute',this)">⚠️ Disputes</button>
+  <button onclick="showPanel('search',this)">🔍 Search</button>
+  <button onclick="showPanel('officials',this)">👮 Officials</button>
+  <button onclick="showPanel('blockchain',this)">⛓️ Blockchain</button>
+</nav>
+
+<main>
+
+<!-- DASHBOARD -->
+<div id="panel-dashboard" class="panel active">
+  <div class="stats-grid">
+    <div class="stat-card" style="border-top-color:#2980b9"><div class="number" id="stat-lands">—</div><div class="label">Land Parcels</div></div>
+    <div class="stat-card" style="border-top-color:#8e44ad"><div class="number" id="stat-blocks">—</div><div class="label">Blockchain Blocks</div></div>
+    <div class="stat-card" style="border-top-color:#27ae60"><div class="number" id="stat-txns">—</div><div class="label">Transactions</div></div>
+    <div class="stat-card" style="border-top-color:#e67e22"><div class="number" id="stat-officials">—</div><div class="label">Officials</div></div>
+  </div>
+  <div class="card">
+    <h2>🗺️ All Land Parcels</h2>
+    <div id="lands-table-container"><div class="empty-state"><div class="empty-icon">🏗️</div><p>Loading parcels…</p></div></div>
+  </div>
+</div>
+
+<!-- REGISTER LAND -->
+<div id="panel-register" class="panel">
+  <div class="card">
+    <h2>📝 Register New Land Parcel</h2>
+    <div class="alert alert-info">🔑 Only registered <strong>Officials</strong> can register land. Enter your official address below.</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Official Address *</label><input id="reg-caller" placeholder="e.g. OFF_001"/></div>
+      <div class="form-group"><label>Title Number *</label><input id="reg-title" placeholder="e.g. LND-2024-001"/></div>
+      <div class="form-group"><label>Location *</label><input id="reg-location" placeholder="e.g. Plot 5, Sector 12, Kolkata"/></div>
+      <div class="form-group"><label>Area (sq meters) *</label><input id="reg-area" type="number" placeholder="e.g. 500"/></div>
+      <div class="form-group"><label>Land Use</label>
+        <select id="reg-use"><option>residential</option><option>commercial</option><option>agricultural</option><option>industrial</option><option>mixed</option></select>
+      </div>
+      <div class="form-group"><label>Owner Address *</label><input id="reg-owner-addr" placeholder="e.g. CIT_001"/></div>
+      <div class="form-group"><label>Owner Name *</label><input id="reg-owner-name" placeholder="e.g. Ravi Kumar"/></div>
+      <div class="form-group"><label>Valuation (₹)</label><input id="reg-val" type="number" placeholder="e.g. 5000000"/></div>
+      <div class="form-group"><label>Coordinates (optional)</label><input id="reg-coords" placeholder="22.5726° N, 88.3639° E"/></div>
+    </div>
+    <br>
+    <button class="btn btn-primary" id="reg-btn" onclick="registerLand()">⛏️ Register &amp; Mine Block</button>
+    <div id="reg-result"></div>
+  </div>
+</div>
+
+<!-- TRANSFER -->
+<div id="panel-transfer" class="panel">
+  <div class="card">
+    <h2>🔄 Transfer Ownership</h2>
+    <div class="alert alert-info">🔑 Only <strong>Officials</strong> can execute transfers. Land must be <strong>ACTIVE</strong> status.</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Official Address *</label><input id="tx-caller" placeholder="e.g. OFF_001"/></div>
+      <div class="form-group"><label>Land ID *</label><input id="tx-land" placeholder="Paste UUID land_id"/></div>
+      <div class="form-group"><label>New Owner Address *</label><input id="tx-new-addr" placeholder="e.g. CIT_002"/></div>
+      <div class="form-group"><label>New Owner Name *</label><input id="tx-new-name" placeholder="e.g. Priya Sharma"/></div>
+      <div class="form-group"><label>Transfer Type</label>
+        <select id="tx-type"><option>SALE</option><option>INHERITANCE</option><option>GIFT</option><option>COURT_ORDER</option></select>
+      </div>
+      <div class="form-group"><label>Notes</label><input id="tx-notes" placeholder="Optional notes"/></div>
+    </div>
+    <br>
+    <button class="btn btn-success" id="tx-btn" onclick="transferLand()">✅ Execute Transfer</button>
+    <div id="tx-result"></div>
+  </div>
+</div>
+
+<!-- ENCUMBER -->
+<div id="panel-encumber" class="panel">
+  <div class="card">
+    <h2>🔒 Encumber Land (Mortgage / Lien)</h2>
+    <div class="alert alert-warning">⚠️ Encumbering a parcel will <strong>block all transfers</strong> until the encumbrance is released.</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Official Address *</label><input id="enc-caller" placeholder="e.g. OFF_001"/></div>
+      <div class="form-group"><label>Land ID *</label><input id="enc-land" placeholder="Paste UUID land_id"/></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Encumbrance Details *</label>
+        <textarea id="enc-details" placeholder="e.g. HDFC Bank Mortgage — ₹4,000,000 — Loan #HDFC-2024-8821"></textarea>
+      </div>
+    </div>
+    <br>
+    <button class="btn btn-warning" onclick="encumberLand()">🔒 Apply Encumbrance</button>
+    <div id="enc-result"></div>
+  </div>
+
+  <div class="card">
+    <h2>🔓 Release Encumbrance</h2>
+    <div class="alert alert-info">Land will return to <strong>ACTIVE</strong> status after release.</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Official Address *</label><input id="rel-caller" placeholder="e.g. OFF_001"/></div>
+      <div class="form-group"><label>Land ID *</label><input id="rel-land" placeholder="Paste UUID land_id"/></div>
+    </div>
+    <br>
+    <button class="btn btn-success" onclick="releaseLand()">🔓 Release Encumbrance</button>
+    <div id="rel-result"></div>
+  </div>
+</div>
+
+<!-- DISPUTES -->
+<div id="panel-dispute" class="panel">
+  <div class="card">
+    <h2>⚠️ Raise a Dispute</h2>
+    <div class="alert alert-warning">Any registered user can raise a dispute. Disputed land <strong>cannot be transferred</strong>.</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Your Address *</label><input id="disp-caller" placeholder="e.g. CIT_003"/></div>
+      <div class="form-group"><label>Land ID *</label><input id="disp-land" placeholder="Paste UUID land_id"/></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Reason for Dispute *</label>
+        <textarea id="disp-reason" placeholder="e.g. Boundary encroachment on north side — 2m overlap claimed"></textarea>
+      </div>
+    </div>
+    <br>
+    <button class="btn btn-danger" onclick="raiseDispute()">⚠️ Submit Dispute</button>
+    <div id="disp-result"></div>
+  </div>
+
+  <div class="card">
+    <h2>✅ Resolve a Dispute</h2>
+    <div class="alert alert-info">🔑 Only <strong>Officials</strong> can resolve disputes.</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Official Address *</label><input id="res-caller" placeholder="e.g. OFF_002"/></div>
+      <div class="form-group"><label>Land ID *</label><input id="res-land" placeholder="Paste UUID land_id"/></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Resolution Details *</label>
+        <textarea id="res-resolution" placeholder="e.g. Court Order WB/2024/1234 — Priya Sharma confirmed as rightful owner"></textarea>
+      </div>
+    </div>
+    <br>
+    <button class="btn btn-success" onclick="resolveDispute()">✅ Resolve Dispute</button>
+    <div id="res-result"></div>
+  </div>
+</div>
+
+<!-- SEARCH -->
+<div id="panel-search" class="panel">
+  <div class="card">
+    <h2>🔍 Search Land Records</h2>
+    <div class="search-bar">
+      <input id="search-input" placeholder="Enter Land ID (UUID) or Title Number…"/>
+      <button class="btn btn-primary" onclick="searchByLandId()">Search by ID</button>
+      <button class="btn btn-outline" onclick="searchByTitle()">Search by Title</button>
+    </div>
+    <div id="search-result"></div>
+  </div>
+
+  <div class="card">
+    <h2>📜 Full History &amp; Audit Trail</h2>
+    <div class="search-bar">
+      <input id="hist-input" placeholder="Enter Land ID for full blockchain history…"/>
+      <button class="btn btn-primary" onclick="getHistory()">Get History</button>
+    </div>
+    <div id="hist-result"></div>
+  </div>
+</div>
+
+<!-- OFFICIALS -->
+<div id="panel-officials" class="panel">
+  <div class="card">
+    <h2>👮 Register Official</h2>
+    <div class="form-grid">
+      <div class="form-group"><label>Address *</label><input id="off-addr" placeholder="e.g. OFF_002"/></div>
+      <div class="form-group"><label>Name *</label><input id="off-name" placeholder="e.g. Arjun Verma"/></div>
+      <div class="form-group"><label>Role</label>
+        <select id="off-role"><option>registrar</option><option>senior_registrar</option><option>surveyor</option><option>district_officer</option><option>super_admin</option></select>
+      </div>
+      <div class="form-group"><label>Department</label><input id="off-dept" placeholder="e.g. Revenue Dept, West Bengal"/></div>
+    </div>
+    <br>
+    <button class="btn btn-primary" onclick="registerOfficial()">➕ Add Official</button>
+    <div id="off-result"></div>
+  </div>
+
+  <div class="card">
+    <h2>👤 Register Citizen</h2>
+    <div class="form-grid">
+      <div class="form-group"><label>Address *</label><input id="cit-addr" placeholder="e.g. CIT_001"/></div>
+      <div class="form-group"><label>Name *</label><input id="cit-name" placeholder="Full Name"/></div>
+      <div class="form-group"><label>National ID *</label><input id="cit-nid" placeholder="e.g. AADHAR-XXXX-XXXX"/></div>
+      <div class="form-group"><label>Contact</label><input id="cit-contact" placeholder="phone or email"/></div>
+    </div>
+    <br>
+    <button class="btn btn-primary" onclick="registerCitizen()">➕ Add Citizen</button>
+    <div id="cit-result"></div>
+  </div>
+</div>
+
+<!-- BLOCKCHAIN -->
+<div id="panel-blockchain" class="panel">
+  <div class="card">
+    <h2>⛓️ Live Blockchain Explorer</h2>
+    <div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:1rem">
+      <button class="btn btn-primary" onclick="loadChain()">🔄 Refresh Chain</button>
+      <button class="btn btn-success" onclick="validateChain()">✔ Validate Integrity</button>
+    </div>
+    <div id="validate-banner" class="validate-banner"></div>
+    <div id="chain-container"></div>
+  </div>
+</div>
+
+</main>
+
+<script>
+const API = "";
+
+async function apiFetch(path, method="GET", body=null, caller=null) {
+  const headers = {"Content-Type":"application/json"};
+  if (caller) headers["X-Caller-Address"] = caller;
+  const res = await fetch(API+path, {method, headers, body: body ? JSON.stringify(body):null});
+  return res.json();
+}
+
+function showPanel(name, btn) {
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+  document.getElementById("panel-"+name).classList.add("active");
+  if (btn) btn.classList.add("active");
+  if (name==="dashboard") loadDashboard();
+  if (name==="blockchain") loadChain();
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(()=>{
+    const el = event.target; el.textContent="Copied!";
+    setTimeout(()=>el.textContent="Copy", 1500);
+  });
+}
+
+function statusBadge(status) {
+  const s = (status||"").toLowerCase().replace("landstatus.","");
+  const clean = s.toUpperCase();
+  return `<span class="badge badge-${s}">${clean}</span>`;
+}
+
+function txIcon(type) {
+  return {REGISTER:"🏗️",TRANSFER:"🔄",ENCUMBER:"🔒",RELEASE_ENCUMBRANCE:"🔓",DISPUTE:"⚠️",RESOLVE_DISPUTE:"✅",UPDATE_DETAILS:"✏️"}[type] || "📌";
+}
+function txClass(type) {
+  return {REGISTER:"register",TRANSFER:"transfer",ENCUMBER:"encumber",RELEASE_ENCUMBRANCE:"release",DISPUTE:"dispute",RESOLVE_DISPUTE:"resolve"}[type] || "default";
+}
+
+// ── Universal result card ──────────────────────────────────────────────
+function showResultCard(containerId, success, title, fields, note="") {
+  document.getElementById(containerId).innerHTML = `
+    <div class="result-card ${success?"rc-success":"rc-error"} show">
+      <div class="rc-header">${success?"✅":"❌"} ${title}</div>
+      <div class="rc-grid">
+        ${fields.map(f=>`<div class="rc-field"><div class="rc-label">${f.label}</div><div class="rc-value">${f.value}</div></div>`).join("")}
+      </div>
+      ${note?`<div class="rc-note">ℹ️ ${note}</div>`:""}
+    </div>`;
+}
+
+function showErrorCard(containerId, message) {
+  document.getElementById(containerId).innerHTML = `
+    <div class="result-card rc-error show">
+      <div class="rc-header">❌ Operation Failed</div>
+      <p class="rc-error-msg">${message}</p>
+    </div>`;
+}
+
+function setBtnLoading(id, loading, original) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.innerHTML = loading ? `<span class="spinner"></span> Processing…` : original;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════════════════════════════════════
+async function loadDashboard() {
+  const stats = await apiFetch("/api/stats");
+  if (stats.success) {
+    const d = stats.data;
+    document.getElementById("stat-lands").textContent     = d.total_lands;
+    document.getElementById("stat-blocks").textContent    = d.blockchain.total_blocks;
+    document.getElementById("stat-txns").textContent      = d.blockchain.total_transactions;
+    document.getElementById("stat-officials").textContent = d.total_officials;
+    document.getElementById("chainValid").textContent     = d.blockchain.is_valid ? "✅ Valid" : "❌ Invalid";
+    document.getElementById("blockCount").textContent     = d.blockchain.total_blocks;
+  }
+  const lands = await apiFetch("/api/lands");
+  const container = document.getElementById("lands-table-container");
+  if (!lands.success || lands.data.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🏗️</div><p>No land parcels registered yet.</p></div>`;
+    return;
+  }
+  let html = `<div class="table-wrap"><table>
+    <tr><th>Title Number</th><th>Location</th><th>Area m²</th><th>Owner</th><th>Land Use</th><th>Status</th><th>Valuation ₹</th></tr>`;
+  for (const l of lands.data) {
+    html += `<tr>
+      <td><strong>${l.title_number}</strong></td>
+      <td>${l.location}</td>
+      <td>${Number(l.area_sqm).toLocaleString()}</td>
+      <td>${l.owner_name}<br><small style="color:#aaa;font-size:.75rem">${l.owner_address}</small></td>
+      <td><span class="badge badge-gray">${l.land_use}</span></td>
+      <td>${statusBadge(l.status)}</td>
+      <td>₹${Number(l.valuation).toLocaleString()}</td>
+    </tr>`;
+  }
+  html += "</table></div>";
+  container.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  REGISTER LAND
+// ══════════════════════════════════════════════════════════════════════════
+async function registerLand() {
+  const caller = document.getElementById("reg-caller").value.trim();
+  const body = {
+    title_number:  document.getElementById("reg-title").value.trim(),
+    location:      document.getElementById("reg-location").value.trim(),
+    area_sqm:      document.getElementById("reg-area").value,
+    land_use:      document.getElementById("reg-use").value,
+    owner_address: document.getElementById("reg-owner-addr").value.trim(),
+    owner_name:    document.getElementById("reg-owner-name").value.trim(),
+    valuation:     document.getElementById("reg-val").value || 0,
+    coordinates:   document.getElementById("reg-coords").value.trim() || null,
+  };
+  setBtnLoading("reg-btn", true);
+  const res = await apiFetch("/api/lands", "POST", body, caller);
+  setBtnLoading("reg-btn", false, "⛏️ Register &amp; Mine Block");
+  if (!res.success) { showErrorCard("reg-result", res.error); return; }
+  const d = res.data;
+  showResultCard("reg-result", true, "Land Parcel Registered Successfully!", [
+    {label:"Land ID",       value:`<span class="rc-id">${d.land_id}</span> <button class="copy-btn" onclick="copyToClipboard('${d.land_id}')">Copy</button>`},
+    {label:"Title Number",  value:d.title_number},
+    {label:"Location",      value:d.location},
+    {label:"Area",          value:`${Number(d.area_sqm).toLocaleString()} m²`},
+    {label:"Land Use",      value:`<span class="badge badge-gray">${d.land_use}</span>`},
+    {label:"Owner",         value:d.owner_name},
+    {label:"Owner Address", value:d.owner_address},
+    {label:"Status",        value:statusBadge(d.status)},
+    {label:"Valuation",     value:`₹${Number(d.valuation).toLocaleString()}`},
+    {label:"Coordinates",   value:d.coordinates || "—"},
+    {label:"Registered At", value:new Date(d.registered_at*1000).toLocaleString()},
+  ], "A new block has been mined. This registration is permanently recorded on the blockchain and cannot be altered.");
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  TRANSFER
+// ══════════════════════════════════════════════════════════════════════════
+async function transferLand() {
+  const caller = document.getElementById("tx-caller").value.trim();
+  const landId = document.getElementById("tx-land").value.trim();
+  const body = {
+    new_owner_address: document.getElementById("tx-new-addr").value.trim(),
+    new_owner_name:    document.getElementById("tx-new-name").value.trim(),
+    transfer_type:     document.getElementById("tx-type").value,
+    notes:             document.getElementById("tx-notes").value.trim(),
+  };
+  setBtnLoading("tx-btn", true);
+  const res = await apiFetch(`/api/lands/${landId}/transfer`, "POST", body, caller);
+  setBtnLoading("tx-btn", false, "✅ Execute Transfer");
+  if (!res.success) { showErrorCard("tx-result", res.error); return; }
+  const d = res.data;
+  showResultCard("tx-result", true, "Ownership Transferred Successfully!", [
+    {label:"Record ID",      value:`<span class="rc-id">${d.record_id.substring(0,16)}…</span>`},
+    {label:"Land ID",        value:`<span class="rc-id">${d.land_id.substring(0,16)}…</span>`},
+    {label:"Previous Owner", value:d.previous_owner},
+    {label:"New Owner",      value:`<strong>${d.new_owner}</strong>`},
+    {label:"Transfer Type",  value:`<span class="badge badge-blue">${d.transfer_type}</span>`},
+    {label:"Registered By",  value:d.registered_by},
+    {label:"Transfer Date",  value:new Date(d.transfer_date*1000).toLocaleString()},
+    {label:"Notes",          value:d.notes || "—"},
+  ], "Ownership has been permanently updated on the blockchain. The new owner is now the legal record holder.");
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  ENCUMBER / RELEASE
+// ══════════════════════════════════════════════════════════════════════════
+async function encumberLand() {
+  const caller  = document.getElementById("enc-caller").value.trim();
+  const landId  = document.getElementById("enc-land").value.trim();
+  const details = document.getElementById("enc-details").value.trim();
+  const res = await apiFetch(`/api/lands/${landId}/encumber`, "POST", {details}, caller);
+  if (!res.success) { showErrorCard("enc-result", res.error); return; }
+  const d = res.data;
+  showResultCard("enc-result", true, "Encumbrance Applied to Land Parcel", [
+    {label:"Title Number",        value:d.title_number},
+    {label:"Location",            value:d.location},
+    {label:"Owner",               value:d.owner_name},
+    {label:"New Status",          value:statusBadge(d.status)},
+    {label:"Encumbrance Details", value:d.encumbrance_details},
+    {label:"Applied At",          value:new Date(d.last_updated*1000).toLocaleString()},
+  ], "This land parcel is now ENCUMBERED. All ownership transfers are blocked until the encumbrance is officially released.");
+}
+
+async function releaseLand() {
+  const caller = document.getElementById("rel-caller").value.trim();
+  const landId = document.getElementById("rel-land").value.trim();
+  const res = await apiFetch(`/api/lands/${landId}/release-encumbrance`, "POST", {}, caller);
+  if (!res.success) { showErrorCard("rel-result", res.error); return; }
+  const d = res.data;
+  showResultCard("rel-result", true, "Encumbrance Released — Land is Now Active", [
+    {label:"Title Number",  value:d.title_number},
+    {label:"Location",      value:d.location},
+    {label:"Owner",         value:d.owner_name},
+    {label:"New Status",    value:statusBadge(d.status)},
+    {label:"Released At",   value:new Date(d.last_updated*1000).toLocaleString()},
+  ], "The encumbrance has been officially lifted. This land can now be freely transferred.");
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  DISPUTES
+// ══════════════════════════════════════════════════════════════════════════
+async function raiseDispute() {
+  const caller = document.getElementById("disp-caller").value.trim();
+  const landId = document.getElementById("disp-land").value.trim();
+  const reason = document.getElementById("disp-reason").value.trim();
+  const res = await apiFetch(`/api/lands/${landId}/dispute`, "POST", {reason}, caller);
+  if (!res.success) { showErrorCard("disp-result", res.error); return; }
+  const d = res.data;
+  showResultCard("disp-result", true, "Dispute Raised — Land Flagged for Review", [
+    {label:"Title Number",   value:d.title_number},
+    {label:"Location",       value:d.location},
+    {label:"Current Owner",  value:d.owner_name},
+    {label:"Status",         value:statusBadge(d.status)},
+    {label:"Dispute Reason", value:d.dispute_details},
+    {label:"Raised At",      value:new Date(d.last_updated*1000).toLocaleString()},
+  ], "The land is now DISPUTED. No transfers can occur until a registered official formally resolves this dispute.");
+}
+
+async function resolveDispute() {
+  const caller     = document.getElementById("res-caller").value.trim();
+  const landId     = document.getElementById("res-land").value.trim();
+  const resolution = document.getElementById("res-resolution").value.trim();
+  const res = await apiFetch(`/api/lands/${landId}/resolve-dispute`, "POST", {resolution}, caller);
+  if (!res.success) { showErrorCard("res-result", res.error); return; }
+  const d = res.data;
+  showResultCard("res-result", true, "Dispute Resolved — Land Reinstated as Active", [
+    {label:"Title Number", value:d.title_number},
+    {label:"Location",     value:d.location},
+    {label:"Owner",        value:d.owner_name},
+    {label:"New Status",   value:statusBadge(d.status)},
+    {label:"Resolved At",  value:new Date(d.last_updated*1000).toLocaleString()},
+  ], "The dispute has been officially closed and logged on the blockchain. The land is now fully transferable.");
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  SEARCH
+// ══════════════════════════════════════════════════════════════════════════
+async function searchByLandId() {
+  const id = document.getElementById("search-input").value.trim();
+  renderLandDetailCard("search-result", await apiFetch(`/api/lands/${id}`));
+}
+async function searchByTitle() {
+  const title = document.getElementById("search-input").value.trim();
+  renderLandDetailCard("search-result", await apiFetch(`/api/lands/title/${encodeURIComponent(title)}`));
+}
+
+function renderLandDetailCard(containerId, res) {
+  const container = document.getElementById(containerId);
+  if (!res.success) {
+    container.innerHTML = `<div class="alert alert-error">❌ ${res.error}</div>`;
+    return;
+  }
+  const l = res.data;
+  const encBanner = l.encumbrance_details
+    ? `<div style="padding:.8rem 1.4rem;background:#fef9e7;border-top:1px solid #f5cba7;font-size:.85rem">🔒 <strong>Encumbrance:</strong> ${l.encumbrance_details}</div>` : "";
+  const dispBanner = l.dispute_details
+    ? `<div style="padding:.8rem 1.4rem;background:#fdf2f2;border-top:1px solid #f5b7b1;font-size:.85rem">⚠️ <strong>Dispute:</strong> ${l.dispute_details}</div>` : "";
+  container.innerHTML = `
+    <div class="land-detail-card">
+      <div class="ldc-header">
+        <div><h3>📄 ${l.title_number}</h3><p>📍 ${l.location}</p></div>
+        ${statusBadge(l.status)}
+      </div>
+      <div class="ldc-body">
+        <div class="ldc-field"><div class="ldc-label">Land ID</div><div class="ldc-value"><span class="ldc-id">${l.land_id.substring(0,22)}…</span> <button class="copy-btn" onclick="copyToClipboard('${l.land_id}')">Copy</button></div></div>
+        <div class="ldc-field"><div class="ldc-label">Owner Name</div><div class="ldc-value">${l.owner_name}</div></div>
+        <div class="ldc-field"><div class="ldc-label">Owner Address</div><div class="ldc-value">${l.owner_address}</div></div>
+        <div class="ldc-field"><div class="ldc-label">Area</div><div class="ldc-value">${Number(l.area_sqm).toLocaleString()} m²</div></div>
+        <div class="ldc-field"><div class="ldc-label">Land Use</div><div class="ldc-value"><span class="badge badge-gray">${l.land_use}</span></div></div>
+        <div class="ldc-field"><div class="ldc-label">Valuation</div><div class="ldc-value">₹${Number(l.valuation).toLocaleString()}</div></div>
+        <div class="ldc-field"><div class="ldc-label">Coordinates</div><div class="ldc-value">${l.coordinates || "—"}</div></div>
+        <div class="ldc-field"><div class="ldc-label">Registered At</div><div class="ldc-value">${new Date(l.registered_at*1000).toLocaleString()}</div></div>
+        <div class="ldc-field"><div class="ldc-label">Last Updated</div><div class="ldc-value">${new Date(l.last_updated*1000).toLocaleString()}</div></div>
+      </div>
+      ${encBanner}${dispBanner}
+      <div class="ldc-footer">
+        <span>🏗️ <strong>${l.land_use}</strong></span>
+        <span>📐 <strong>${Number(l.area_sqm).toLocaleString()} m²</strong></span>
+        <span>💰 <strong>₹${Number(l.valuation).toLocaleString()}</strong></span>
+      </div>
+    </div>`;
+}
+
+async function getHistory() {
+  const id = document.getElementById("hist-input").value.trim();
+  const res = await apiFetch(`/api/lands/${id}/history`);
+  const container = document.getElementById("hist-result");
+  if (!res.success) { container.innerHTML=`<div class="alert alert-error">❌ ${res.error}</div>`; return; }
+  const bh = res.data.blockchain_history;
+  const oh = res.data.ownership_history;
+  if (!bh.length) { container.innerHTML=`<div class="empty-state"><div class="empty-icon">📭</div><p>No history found.</p></div>`; return; }
+
+  let html = `<div style="font-size:.83rem;color:#888;margin-bottom:.6rem">📦 <strong>${bh.length}</strong> blockchain event(s) found</div><div class="timeline">`;
+  for (const tx of bh) {
+    html += `
+      <div class="tl-item">
+        <div class="tl-icon ${txClass(tx.tx_type)}">${txIcon(tx.tx_type)}</div>
+        <div class="tl-body">
+          <div class="tl-title">${tx.tx_type.replace(/_/g," ")}</div>
+          <div class="tl-meta">${new Date(tx.timestamp*1000).toLocaleString()} &nbsp;·&nbsp; <strong>${tx.from_address}</strong> → <strong>${tx.to_address}</strong></div>
+          <div class="tl-tags">
+            <span class="tl-tag tl-tag-block">Block #${tx.block_index}</span>
+            <span class="tl-tag tl-tag-tx">TX: ${tx.tx_id.substring(0,14)}…</span>
+          </div>
+        </div>
+      </div>`;
+  }
+  html += "</div>";
+
+  if (oh && oh.length) {
+    html += `<div class="divider"></div>
+      <div style="font-size:.95rem;font-weight:700;color:var(--primary);margin-bottom:.8rem">🤝 Ownership Transfer Records</div>
+      <div class="table-wrap"><table>
+        <tr><th>Transfer Type</th><th>From</th><th>To</th><th>Date</th><th>Registered By</th><th>Notes</th></tr>`;
+    for (const r of oh) {
+      html += `<tr>
+        <td><span class="badge badge-blue">${r.transfer_type}</span></td>
+        <td>${r.previous_owner}</td>
+        <td><strong>${r.new_owner}</strong></td>
+        <td>${new Date(r.transfer_date*1000).toLocaleString()}</td>
+        <td>${r.registered_by}</td>
+        <td>${r.notes||"—"}</td>
+      </tr>`;
+    }
+    html += "</table></div>";
+  }
+  container.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  OFFICIALS & CITIZENS
+// ══════════════════════════════════════════════════════════════════════════
+async function registerOfficial() {
+  const body = {
+    address:    document.getElementById("off-addr").value.trim(),
+    name:       document.getElementById("off-name").value.trim(),
+    role:       document.getElementById("off-role").value,
+    department: document.getElementById("off-dept").value.trim(),
+  };
+  const res = await apiFetch("/api/officials","POST",body);
+  if (!res.success) { showErrorCard("off-result", res.error); return; }
+  const d = res.data;
+  showResultCard("off-result", true, "Official Registered Successfully", [
+    {label:"Address",    value:`<strong>${d.address}</strong>`},
+    {label:"Name",       value:d.name},
+    {label:"Role",       value:`<span class="badge badge-blue">${d.role}</span>`},
+    {label:"Department", value:d.department || "—"},
+    {label:"Registered", value:new Date(d.registered_at*1000).toLocaleString()},
+  ], `${d.name} is now authorised to register land, execute transfers, and manage disputes.`);
+}
+
+async function registerCitizen() {
+  const body = {
+    address:     document.getElementById("cit-addr").value.trim(),
+    name:        document.getElementById("cit-name").value.trim(),
+    national_id: document.getElementById("cit-nid").value.trim(),
+    contact:     document.getElementById("cit-contact").value.trim(),
+  };
+  const res = await apiFetch("/api/citizens","POST",body);
+  if (!res.success) { showErrorCard("cit-result", res.error); return; }
+  const d = res.data;
+  showResultCard("cit-result", true, "Citizen Registered Successfully", [
+    {label:"Address",     value:`<strong>${d.address}</strong>`},
+    {label:"Name",        value:d.name},
+    {label:"National ID", value:d.national_id},
+    {label:"Contact",     value:d.contact || "—"},
+    {label:"Registered",  value:new Date(d.registered_at*1000).toLocaleString()},
+  ], `${d.name} can now be assigned as a land owner and raise disputes on the platform.`);
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  BLOCKCHAIN EXPLORER
+// ══════════════════════════════════════════════════════════════════════════
+async function loadChain() {
+  document.getElementById("chain-container").innerHTML=`<div class="empty-state"><div class="empty-icon">⏳</div>Loading blockchain…</div>`;
+  const res = await apiFetch("/api/blockchain");
+  if (!res.success) return;
+  const chain = [...res.data.chain].reverse();
+  let html = "";
+  for (const block of chain) {
+    const isGenesis = block.index === 0;
+    const txCount   = block.transactions.length;
+    html += `
+      <div class="block-card">
+        <div class="bc-header">
+          <div><span class="block-num">Block #${block.index}</span>${isGenesis?' <span class="genesis-tag">GENESIS</span>':''}</div>
+          <div class="block-meta">${txCount} transaction${txCount!==1?"s":""} &nbsp;·&nbsp; ${new Date(block.timestamp*1000).toLocaleString()}</div>
+        </div>
+        <div class="bc-hashes">
+          <span><span class="hash-label">Block Hash</span>${block.hash||"—"}</span>
+          <span><span class="hash-label">Previous Hash</span>${block.previous_hash}</span>
+        </div>`;
+    if (!txCount) {
+      html += `<div class="bc-empty">No transactions — genesis block</div>`;
+    } else {
+      html += `<div class="bc-txns">`;
+      for (const tx of block.transactions) {
+        html += `<div class="bc-tx">
+          <span class="tx-type">${txIcon(tx.tx_type)} ${tx.tx_type.replace(/_/g," ")}</span>
+          <span class="tx-flow">${tx.from_address} → ${tx.to_address}</span>
+          <span class="tx-land">Land: ${tx.land_id.substring(0,10)}…</span>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+    html += `</div>`;
+  }
+  document.getElementById("chain-container").innerHTML = html || `<div class="empty-state">Only genesis block exists.</div>`;
+}
+
+async function validateChain() {
+  const res = await apiFetch("/api/blockchain/validate");
+  const banner = document.getElementById("validate-banner");
+  banner.className = "validate-banner show " + (res.data.is_valid ? "valid" : "invalid");
+  banner.innerHTML = res.data.is_valid
+    ? `✅ <span>Blockchain is <strong>VALID</strong> — All ${res.data.total_blocks} blocks verified. No tampering detected.</span>`
+    : `❌ <span>Blockchain integrity check <strong>FAILED</strong> — Possible tampering detected!</span>`;
+}
+
+loadDashboard();
+</script>
+</body>
+</html>

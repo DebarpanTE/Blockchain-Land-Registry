@@ -1,0 +1,35 @@
+{
+  "version": "0.1.0",
+  "configurations": [
+    {
+      "name": "🏛️ Run Land Registry Server",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/api/app.py",
+      "console": "integratedTerminal",
+      "env": {
+        "FLASK_ENV": "development",
+        "FLASK_DEBUG": "1"
+      }
+    },
+    {
+      "name": "🧪 Run All Tests",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "tests/",
+        "-v",
+        "--tb=short"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "🌱 Run Demo Seed Script",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/demo_seed.py",
+      "console": "integratedTerminal"
+    }
+  ]
+}
